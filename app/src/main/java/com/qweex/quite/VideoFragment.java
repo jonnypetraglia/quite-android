@@ -15,6 +15,7 @@ public class VideoFragment extends FragmentBase {
         if(v==null) {
             v = new VideoView(context);
             v.setId(R.id.content_view);
+            //v.setOnLongClickListener(((MainActivity)getActivity()).showOptions);
 
             mc = new MediaController(getContext());
             //TODO: Make mc only show on long press (or preferably, swipe down)

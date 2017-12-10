@@ -13,6 +13,7 @@ public class GifFragment extends FragmentBase {
         if(v==null) {
             v = new WebView(context);
             v.setId(R.id.content_view);
+            v.setOnLongClickListener(((MainActivity)getActivity()).showOptions);
         }
         String x = "<html style='margin: 0; padding: 0; width: 100%; height: 100%;'>" +
                 "<body style='margin: 0; padding: 0; width: 100%; height: 100%;'>" +

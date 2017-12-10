@@ -11,6 +11,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.Arrays;
 
 public class QuiteAdapter extends FragmentPagerAdapter {
     File dir;
@@ -43,7 +44,7 @@ public class QuiteAdapter extends FragmentPagerAdapter {
         if(files==null) {
             files = new File[]{};
         }
-        //Arrays.sort(files, Options.sortOrder);
+        sort();
         fragments = new FragmentBase[files.length];
         try {
             for (int position = 0; position < files.length; position++) {
@@ -54,12 +55,20 @@ public class QuiteAdapter extends FragmentPagerAdapter {
                     fragments[position] = FragmentBase.newInstance(VideoFragment.class, fullPath);
                 if (handlesFile(files[position].getPath(), GifFragment.filesHandled))
                     fragments[position] = FragmentBase.newInstance(GifFragment.class, fullPath);
-
-                if (files[position].equals(startingFile))
-                    indexOfStart = position;
             }
         }
         catch(Exception e) {}
+    }
+
+
+    public void sort() {
+        if(Options.sortOrder==Options.RANDOM) {
+        //    Collections.shuffle(files);
+        } else
+        Arrays.sort(files, Options.sortOrder);
+        for(int position = 0; position < files.length; position ++)
+            if (files[position].equals(startingFile))
+                indexOfStart = position;
     }
 
     @Override

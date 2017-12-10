@@ -14,6 +14,7 @@ public class ImageFragment extends FragmentBase {
         if(v==null) {
             v = new ImageView(context);
             v.setId(R.id.content_view);
+            v.setOnLongClickListener(((MainActivity)getActivity()).showOptions);
         }
         Bitmap myBitmap = BitmapFactory.decodeFile(currentPath);
         v.setImageBitmap(myBitmap);

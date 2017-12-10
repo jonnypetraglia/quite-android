@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     ViewPager pager;
     QuiteAdapter qAdapter;
     int lastSelected;
+    Options optionsDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,11 +94,28 @@ public class MainActivity extends AppCompatActivity {
 
         ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
-        pager.setOnLongClickListener(showOptions);
 
         pager.setForegroundGravity(Gravity.CENTER);
         setContentView(pager, lp);
         ((View)pager.getParent()).setBackgroundColor(BLACK);
+
+        pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                ((FragmentBase)qAdapter.getItem(lastSelected)).pause();
+                lastSelected = position; //or if this don't work, pager.getCurrentItem();
+                ((FragmentBase)qAdapter.getItem(lastSelected)).unPause();
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+            }
+        });
+        //*/
     }
 
     protected void initializeAdapter() {
@@ -117,28 +135,13 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
-        pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                ((FragmentBase)qAdapter.getItem(lastSelected)).pause();
-                lastSelected = position; //or if this don't work, pager.getCurrentItem();
-                ((FragmentBase)qAdapter.getItem(lastSelected)).unPause();
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-            }
-        });
-        //*/
         pager.setAdapter(qAdapter);
         pager.setCurrentItem(
                 lastSelected = qAdapter.getIndexOfStart()
         );
         Log.d("Starting", "at " + lastSelected);
+
+        optionsDialog = new Options(this, qAdapter);
     }
 
     DialogInterface.OnClickListener goToSettings = new DialogInterface.OnClickListener() {
@@ -151,16 +154,11 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    View.OnLongClickListener showOptions = new View.OnLongClickListener() {
+    public View.OnLongClickListener showOptions = new View.OnLongClickListener() {
         @Override
         public boolean onLongClick(View v) {
-            // Order: name/date/size/type/random
-            // Reverse order
-            // Recurse
-            // Filetypes
-            // Start slideshow w/ seconds | Stop slideshow
-
-
+            Log.d("showOptions", "onClickListener");
+            optionsDialog.show();
             return false;
         }
     };
