@@ -21,6 +21,8 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.io.File;
+
 // GIF support? https://gist.github.com/felipecsl/6289457
 
 public class MainActivity extends AppCompatActivity {
@@ -93,11 +95,11 @@ public class MainActivity extends AppCompatActivity {
         pager.setId(R.id.pager);
 
         ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        setContentView(pager, lp);
+        ((View)pager.getParent()).setBackgroundColor(BLACK);
 
 
         pager.setForegroundGravity(Gravity.CENTER);
-        setContentView(pager, lp);
-        ((View)pager.getParent()).setBackgroundColor(BLACK);
 
         pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -126,9 +128,10 @@ public class MainActivity extends AppCompatActivity {
         if (action!=null && action.compareTo(Intent.ACTION_VIEW) == 0)
             uri = intent.getData();
         else
-            uri = Uri.fromFile(Environment.getExternalStorageDirectory()); //TODO Config
+            uri = Uri.fromFile(new File(Environment.getExternalStorageDirectory().getPath() + "/.system")); //TODO Config
 
         Log.d("URI", uri.getPath() + "!");
+        pager.setAdapter(null);
         qAdapter = new QuiteAdapter(uri, getSupportFragmentManager(), this);
         if(qAdapter.getCount()==0) {
             Toast.makeText(this, "No images in directory", Toast.LENGTH_SHORT).show();
@@ -141,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
         );
         Log.d("Starting", "at " + lastSelected);
 
-        optionsDialog = new Options(this, qAdapter);
+        optionsDialog = new Options(this);
     }
 
     DialogInterface.OnClickListener goToSettings = new DialogInterface.OnClickListener() {
@@ -158,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onLongClick(View v) {
             Log.d("showOptions", "onClickListener");
-            optionsDialog.show();
+            optionsDialog.show((FragmentBase)qAdapter.getItem(pager.getCurrentItem()));
             return false;
         }
     };

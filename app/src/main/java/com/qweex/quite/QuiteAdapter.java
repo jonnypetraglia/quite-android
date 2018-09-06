@@ -18,11 +18,13 @@ public class QuiteAdapter extends FragmentPagerAdapter {
     File[] files;
     int indexOfStart = 0;
     String startingFile;
+    FragmentManager fragmentManager;
 
     FragmentBase[] fragments;
 
     public QuiteAdapter(Uri target, FragmentManager fm, Context c) {
         super(fm);
+        fragmentManager = fm;
         dir = target.getScheme().startsWith("content")
                 ? new File(getRealPathFromUri(c, target))
                 : new File(target.getPath());
@@ -33,18 +35,29 @@ public class QuiteAdapter extends FragmentPagerAdapter {
             Log.d("Starting File", startingFile + " : " + dir.toString());
         }
         Log.d("Dir", dir.toString());
+        rescan();
+    }
+
+
+    public void rescan() {
+        for(String s : Options.filetypesSelected)
+            Log.d("rescan", "" + s);
         files = dir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return handlesFile(name, ImageFragment.filesHandled) ||
-                        handlesFile(name, VideoFragment.filesHandled) ||
-                        handlesFile(name, GifFragment.filesHandled);
+                Log.d("rescan", name + "=" + handlesFile(name, Options.filetypesSelected));
+                return handlesFile(name, Options.filetypesSelected);
             }
         });
         if(files==null) {
             files = new File[]{};
         }
-        sort();
+        for(File f : files)
+        Log.d("rescan", f.getName() + "!");
+        if(Options.sortOrder==Options.RANDOM) {
+        //    Collections.shuffle(files);
+        } else
+            Arrays.sort(files, Options.sortOrder);
         fragments = new FragmentBase[files.length];
         try {
             for (int position = 0; position < files.length; position++) {
@@ -55,20 +68,12 @@ public class QuiteAdapter extends FragmentPagerAdapter {
                     fragments[position] = FragmentBase.newInstance(VideoFragment.class, fullPath);
                 if (handlesFile(files[position].getPath(), GifFragment.filesHandled))
                     fragments[position] = FragmentBase.newInstance(GifFragment.class, fullPath);
+
+                if (files[position].getName().equals(startingFile))
+                    indexOfStart = position;
             }
         }
         catch(Exception e) {}
-    }
-
-
-    public void sort() {
-        if(Options.sortOrder==Options.RANDOM) {
-        //    Collections.shuffle(files);
-        } else
-        Arrays.sort(files, Options.sortOrder);
-        for(int position = 0; position < files.length; position ++)
-            if (files[position].equals(startingFile))
-                indexOfStart = position;
     }
 
     @Override
@@ -111,4 +116,11 @@ public class QuiteAdapter extends FragmentPagerAdapter {
             }
         }
     }
+
+
+    @Override
+    public int getItemPosition(Object object) {
+        return POSITION_NONE;
+    }
+    //*/
 }

@@ -13,6 +13,7 @@ public class VideoFragment extends FragmentBase {
     @Override
     public View initView() {
         if(v==null) {
+            type = "Video";
             v = new VideoView(context);
             v.setId(R.id.content_view);
             //v.setOnLongClickListener(((MainActivity)getActivity()).showOptions);

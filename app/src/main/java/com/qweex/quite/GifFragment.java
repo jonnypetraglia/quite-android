@@ -11,6 +11,7 @@ public class GifFragment extends FragmentBase {
     @Override
     public View initView() {
         if(v==null) {
+            type = "Gif";
             v = new WebView(context);
             v.setId(R.id.content_view);
             v.setOnLongClickListener(((MainActivity)getActivity()).showOptions);
@@ -42,4 +43,5 @@ public class GifFragment extends FragmentBase {
         if(getView()!=null)
             ((WebView)getView().findViewById(R.id.content_view)).onResume(); //TODO: is this the best way?
     }
+
 }

@@ -1,38 +1,73 @@
 package com.qweex.quite;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.graphics.Color;
+import android.net.Uri;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Comparator;
 
 public class Options {
-    private AlertDialog popupDialog;
+    private AlertDialog popupDialog, filetypesSelector;
 
     boolean reverseSort;
-    QuiteAdapter quiteAdapter;
+    TextView aboutText, filetypesText;
 
 
+    public static Comparator<File> sortOrder;
+    public static boolean recurse;
+    public static String[] filetypes = new String[
+            ImageFragment.filesHandled.length +
+                    GifFragment.filesHandled.length +
+                    VideoFragment.filesHandled.length];
+    public static String[] filetypesSelected = new String[filetypes.length];
 
-    public Options(final MainActivity act, QuiteAdapter qAdapter) {
-        this.quiteAdapter = qAdapter;
+    public void updateFiletypesText() {
+        int c = 0;
+        for(String s : filetypesSelected)
+            c += s.equals(".") ? 0 : 1;
+        filetypesText.setText("Select filetypes (" + Integer.toString(c) + ")");
+    }
+
+
+    public Options(final MainActivity act) {
 
         LinearLayout ll = new LinearLayout(act);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         ll.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams lpM = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lpM.setMargins(40,40,40,40);
 
-        String[] sorts = new String[] {"Name", "Date", "Size", "Type", "Random"};
-
+        aboutText = new TextView(act);
+        CheckBox reverseCheckbox = new CheckBox(act),
+                 recurseCheckbox = new CheckBox(act);
         Spinner sortOrderSpinner = new Spinner(act);
+        View filetypesItem = act.getLayoutInflater().inflate(android.R.layout.simple_list_item_1, null);
+        filetypesText = ((TextView)filetypesItem.findViewById(android.R.id.text1));
+        ll.addView(aboutText, lp);
+        ll.addView(sortOrderSpinner, lp);
+        ll.addView(reverseCheckbox, lpM);
+        ll.addView(recurseCheckbox, lpM);
+        ll.addView(filetypesItem, lp);
+
+        aboutText.setPadding(40, 40, 40, 40);
+        aboutText.setBackgroundColor(Color.parseColor("#FDFDF0"));
+
+        String[] sorts = new String[] {"Order by Name", "Order by Date", "Order by Size", "Order by Type", "Order Random"};
         ArrayAdapter<String> adap = new ArrayAdapter<String>(act, android.R.layout.simple_list_item_1, sorts);
         adap.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sortOrderSpinner.setAdapter(adap);
@@ -72,46 +107,109 @@ public class Options {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
-        ll.addView(sortOrderSpinner, lp);
 
-
-        CheckBox reverseCheckbox = new CheckBox(act);
         reverseCheckbox.setChecked(reverseSort);
-        reverseCheckbox.setText("Reverse");
+        reverseCheckbox.setText("Reverse Order");
         reverseCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 reverseSort = isChecked;
             }
         });
-        ll.addView(reverseCheckbox, lp);
 
+        recurseCheckbox.setChecked(recurse);
+        recurseCheckbox.setText("Recurse");
 
-        Button confirmBtn = new Button(act);
-        confirmBtn.setText("Apply");
-        confirmBtn.setOnClickListener(new View.OnClickListener() {
+        //fileTypes
+        updateFiletypesText();
+        boolean[] checkedFiletypes = new boolean[filetypesSelected.length];
+        for(int i=0; i<checkedFiletypes.length; i++)
+            checkedFiletypes[i] = !filetypesSelected[i].equals(".");
+        AlertDialog.Builder filetypesBuilder = new AlertDialog.Builder(act);
+        filetypesBuilder.setMultiChoiceItems(filetypes, checkedFiletypes, new DialogInterface.OnMultiChoiceClickListener() {
             @Override
-            public void onClick(View v) {
-                Log.d("Options", "re-initializing adapter");
-                act.initializeAdapter();
-                popupDialog.hide();
+            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                filetypesSelected[which] = isChecked ? filetypes[which] : ".";
             }
         });
-        ll.addView(confirmBtn, lp);
+        filetypesBuilder.setTitle("Select Filetypes");
+        filetypesBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                updateFiletypesText();
+            }
+        });
+        filetypesSelector = filetypesBuilder.create();
+        filetypesItem.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View v) {
+                 Log.d("filetypesText", "showSelector");
+                 filetypesSelector.show();
+             }
+         });
 
+        ScrollView sv = new ScrollView(act);
+        sv.addView(ll, lp);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(act);
-        builder.setView(ll);
-        popupDialog = builder.show();
-        popupDialog.hide();
+        builder.setView(sv);
+        builder.setPositiveButton("Apply", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Uri currentUri = Uri.parse(
+                        "file:" + act.qAdapter.files[
+                                act.pager.getCurrentItem()
+                                ].getPath());
+                Log.d("Options", "re-initializing adapter : " + currentUri.getPath());
 
-        // Recurse
-        // Filetypes
+                //act.getIntent().setData(currentUri);
+                //act.initializeView();
+                //act.initializeAdapter();
+
+                act.qAdapter.rescan();
+                /*
+                if(quiteAdapter.fragments!=null) {
+                    FragmentTransaction ft = quiteAdapter.fragmentManager.beginTransaction();
+                    for (FragmentBase fb : quiteAdapter.fragments)
+                        ft.remove(fb);
+                    ft.commit();
+                }//*/
+                act.qAdapter.fragments = new FragmentBase[0];
+                act.qAdapter.notifyDataSetChanged();
+                act.pager.setAdapter(null);
+                act.pager.destroyDrawingCache();
+                act.qAdapter.rescan();
+                act.qAdapter.notifyDataSetChanged();
+
+                act.qAdapter = new QuiteAdapter(currentUri, act.getSupportFragmentManager(), act);
+                if(act.qAdapter.getCount()==0) {
+                    Toast.makeText(act, "No images in directory", Toast.LENGTH_SHORT).show();
+                    act.finish();
+                    return;
+                }
+                act.pager.setAdapter(act.qAdapter);
+                 //*/
+                        /*
+                Log.d("New Current", quiteAdapter.files[
+                        act.pager.getCurrentItem()
+                        ].getPath() + "!");
+                act.pager.setAdapter(quiteAdapter);
+                act.pager.setCurrentItem(
+                        act.lastSelected = quiteAdapter.getIndexOfStart()
+                );*/
+
+                popupDialog.hide();
+               // */
+            }
+        });
+        popupDialog = builder.create();
+
         // Start slideshow w/ seconds | Stop slideshow
 
     }
 
-    public void show() {
+    public void show(FragmentBase fragment) {
+        aboutText.setText(fragment.getAbout());
         popupDialog.show();
     }
 
@@ -163,6 +261,18 @@ public class Options {
         }
     };
 
-    public static Comparator<File> sortOrder = nameAsc;
+    static {
+        sortOrder = nameAsc;
+        int i=0;
+        for(String s : ImageFragment.filesHandled)
+            filetypes[i++] = s;
+        for(String s : GifFragment.filesHandled)
+            filetypes[i++] = s;
+        for(String s : VideoFragment.filesHandled)
+            filetypes[i++] = s;
+        Arrays.sort(filetypes);
+        for(int j=0; j<filetypes.length; j++)
+            filetypesSelected[j] = filetypes[j];
+    }
 
 }

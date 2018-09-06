@@ -12,6 +12,7 @@ public class ImageFragment extends FragmentBase {
     @Override
     public View initView() {
         if(v==null) {
+            type = "Image";
             v = new ImageView(context);
             v.setId(R.id.content_view);
             v.setOnLongClickListener(((MainActivity)getActivity()).showOptions);
