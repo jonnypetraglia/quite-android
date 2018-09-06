@@ -13,7 +13,7 @@ import java.util.*
 
 class QuiteAdapter(target: Uri, internal var fragmentManager: FragmentManager, c: Context) : FragmentPagerAdapter(fragmentManager) {
     internal var dir: File
-    internal var files: Array<File>? = null
+    internal var files: ArrayList<File> = arrayListOf()
     var indexOfStart = 0
         internal set
     internal lateinit var startingFile: String
@@ -35,44 +35,58 @@ class QuiteAdapter(target: Uri, internal var fragmentManager: FragmentManager, c
         rescan()
     }
 
-
-    fun rescan() {
-        for (s in Options.filetypesSelected)
-            Log.d("rescan", "" + s)
-        files = dir.listFiles { _, name ->
+    private fun scanFolder(directory : File) {
+        val foldersToScan : ArrayList<File> = arrayListOf()
+        Log.d("rescan", directory.toString() + "...")
+        val filesListed : Array<File> = directory.listFiles { subdir, name ->
             Log.d("rescan", name + "=" + handlesFile(name, Options.filetypesSelected))
+            if(File(subdir,name).isDirectory and Options.recurse)
+                foldersToScan.add(File(subdir, name))
             handlesFile(name, Options.filetypesSelected)
         }
-        if (files == null) {
-            files = arrayOf()
-        }
-        for (f in files!!)
+        for(file in filesListed)
+            files.add(file)
+        for(fldr in foldersToScan)
+            scanFolder(fldr)
+    }
+
+    fun rescan() {
+        files.clear()
+
+        val filesArray : Array<File?> = arrayOfNulls(files.size)
+        files.toArray(filesArray)
+
+        for (s in Options.filetypesSelected)
+            Log.d("rescan", "" + s)
+        scanFolder(dir)
+        for (f in files)
             Log.d("rescan", f.name + "!")
         if (Options.sortOrder === Options.RANDOM) {
             //    Collections.shuffle(files);
         } else
-            Arrays.sort(files!!, Options.sortOrder)
-        fragments = arrayOfNulls(size = this.files!!.size)
+            Arrays.sort(filesArray, Options.sortOrder)
+        fragments = arrayOfNulls(size = this.files.size)
         try {
-            for (position in files!!.indices) {
-                val fullPath = files!![position].path // = dir + "/" + files[position].getName();
-                if (handlesFile(files!![position].path, ImageFragment.filesHandled))
+            for (position in files.indices) {
+                val fullPath = files[position].path // = dir + "/" + files[position].getName();
+                if (handlesFile(files[position].path, ImageFragment.filesHandled))
                     fragments[position] = FragmentBase.newInstance(ImageFragment::class.java, fullPath)
-                if (handlesFile(files!![position].path, VideoFragment.filesHandled))
+                if (handlesFile(files[position].path, VideoFragment.filesHandled))
                     fragments[position] = FragmentBase.newInstance(VideoFragment::class.java, fullPath)
-                if (handlesFile(files!![position].path, GifFragment.filesHandled))
+                if (handlesFile(files[position].path, GifFragment.filesHandled))
                     fragments[position] = FragmentBase.newInstance(GifFragment::class.java, fullPath)
 
-                if (files!![position].name == startingFile)
+                if (files[position].name == startingFile)
                     indexOfStart = position
             }
         } catch (e: Exception) {
         }
+        this.notifyDataSetChanged()
 
     }
 
     override fun getCount(): Int {
-        return if (files == null) 0 else files!!.size
+        return files.size
     }
 
     override fun getItem(position: Int): FragmentBase? {
@@ -108,5 +122,4 @@ class QuiteAdapter(target: Uri, internal var fragmentManager: FragmentManager, c
     override fun getItemPosition(`object`: Any): Int {
         return PagerAdapter.POSITION_NONE
     }
-    //*/
 }

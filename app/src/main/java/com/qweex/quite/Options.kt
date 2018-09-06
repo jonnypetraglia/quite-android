@@ -120,15 +120,17 @@ class Options(act:MainActivity) {
     builder.setView(sv)
     builder.setPositiveButton("Apply", object:DialogInterface.OnClickListener {
         override fun onClick(dialog:DialogInterface, which:Int) {
-        val currentUri = Uri.parse(
-        ("file:" + act.qAdapter.files!![act.pager!!.getCurrentItem()].getPath()))
-        Log.d("Options", "re-initializing adapter : " + currentUri.path!!)
+            val currentUri = Uri.parse(
+            ("file:" + act.qAdapter.files!![act.pager!!.getCurrentItem()].getPath()))
+            Log.d("Options", "re-initializing adapter : " + currentUri.path!!)
 
          //act.getIntent().setData(currentUri);
          //act.initializeView();
          //act.initializeAdapter();
 
-        act.qAdapter.rescan()
+            recurse = recurseCheckbox.isChecked
+
+            act.qAdapter.rescan()
 
 //        if(quiteAdapter.fragments!=null) {
 //            FragmentTransaction ft = quiteAdapter.fragmentManager.beginTransaction();
@@ -178,7 +180,7 @@ class Options(act:MainActivity) {
     }
 
     companion object {
-         var sortOrder:Comparator<File>
+         var sortOrder:Comparator<File?>
          var recurse:Boolean = false
          var filetypes = arrayOfNulls<String>(
                 (ImageFragment.filesHandled.size +
@@ -186,21 +188,21 @@ class Options(act:MainActivity) {
                 VideoFragment.filesHandled.size))
         var filetypesSelected:Array<String?>
 
-         var nameAsc:Comparator<File> = Comparator { f1, f2 -> f1.path.compareTo(f2.path) }
-         var nameDesc:Comparator<File> = Comparator { f1, f2 -> f2.path.compareTo(f1.path) }
-         var dateAsc:Comparator<File> = Comparator { f1, f2 -> (f1.lastModified() - f2.lastModified()) as Int }
-         var dateDesc:Comparator<File> = Comparator { f1, f2 -> (f2.lastModified() - f1.lastModified()) as Int }
-         var sizeAsc:Comparator<File> = Comparator { f1, f2 -> (f1.getTotalSpace() - f2.getTotalSpace()) as Int }
-         var sizeDesc:Comparator<File> = Comparator { f1, f2 -> (f2.getTotalSpace() - f1.getTotalSpace()) as Int }
-         var typeAsc:Comparator<File> = Comparator { f1, f2 ->
-             f1.name.substring(f1.name.lastIndexOf(".") + 1).compareTo(
-                     f2.name.substring(f2.name.lastIndexOf(".") + 1))
+         var nameAsc:Comparator<File?> = Comparator { f1, f2 -> f1!!.path.compareTo(f2!!.path) }
+         var nameDesc:Comparator<File?> = Comparator { f1, f2 -> f2!!.path.compareTo(f1!!.path) }
+         var dateAsc:Comparator<File?> = Comparator { f1, f2 -> (f1!!.lastModified() - f2!!.lastModified()) as Int }
+         var dateDesc:Comparator<File?> = Comparator { f1, f2 -> (f2!!.lastModified() - f1!!.lastModified()) as Int }
+         var sizeAsc:Comparator<File?> = Comparator { f1, f2 -> (f1!!.getTotalSpace() - f2!!.getTotalSpace()) as Int }
+         var sizeDesc:Comparator<File?> = Comparator { f1, f2 -> (f2!!.getTotalSpace() - f1!!.getTotalSpace()) as Int }
+         var typeAsc:Comparator<File?> = Comparator { f1, f2 ->
+             f1!!.name.substring(f1.name.lastIndexOf(".") + 1).compareTo(
+                     f2!!.name.substring(f2.name.lastIndexOf(".") + 1))
          }
-         var typeDesc:Comparator<File> = Comparator { f1, f2 ->
-             f2.name.substring(f2.name.lastIndexOf(".") + 1).compareTo(
-                     f1.name.substring(f1.name.lastIndexOf(".") + 1))
+         var typeDesc:Comparator<File?> = Comparator { f1, f2 ->
+             f2!!.name.substring(f2.name.lastIndexOf(".") + 1).compareTo(
+                     f1!!.name.substring(f1.name.lastIndexOf(".") + 1))
          }
-         var RANDOM:Comparator<File> = Comparator { _, _ -> 0 }
+         var RANDOM:Comparator<File?> = Comparator { _, _ -> 0 }
 
         init{
             filetypesSelected = arrayOfNulls(filetypes.size)
