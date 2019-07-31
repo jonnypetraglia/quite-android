@@ -37,6 +37,8 @@ class QuiteAdapter(target: Uri, internal var fragmentManager: FragmentManager, c
 
     private fun scanFolder(directory : File) {
         val foldersToScan : ArrayList<File> = arrayListOf()
+        var filesToAdd: ArrayList<File> = arrayListOf()
+
         Log.d("rescan", "scan folder: " + directory.toString() + "...")
         val filesListed : Array<File> = directory.listFiles { subdir, name ->
             Log.d("rescan", "scanning file: " + name + "=" + handlesFile(name, Options.filetypesSelected))
@@ -45,7 +47,14 @@ class QuiteAdapter(target: Uri, internal var fragmentManager: FragmentManager, c
             handlesFile(name, Options.filetypesSelected)
         }
         for(file in filesListed)
-            files.add(file)
+            filesToAdd.add(file)
+        if(Options.sortOrder !== Options.RANDOM) {
+            Collections.sort(filesToAdd, Options.sortOrder)
+            Log.d("rescan", "sort order: " + Options.sortOrder)
+        }
+        files.addAll(filesToAdd)
+        if(Options.sortOrder === Options.nameAsc || Options.sortOrder === Options.nameDesc)
+            Collections.sort(foldersToScan, Options.nameAsc)
         for(fldr in foldersToScan)
             scanFolder(fldr)
     }
@@ -58,10 +67,10 @@ class QuiteAdapter(target: Uri, internal var fragmentManager: FragmentManager, c
             Log.d("rescan", "filetype: " + s)
 
         if (Options.sortOrder === Options.RANDOM) {
-            //    Collections.shuffle(files);
-        } else {
-            Collections.sort(files, Options.sortOrder)
             Log.d("rescan", "sort order: " + Options.sortOrder)
+            Collections.shuffle(files);
+        } else if(Options.sortOrder !== Options.nameAsc && Options.sortOrder !== Options.nameDesc) {
+            Collections.sort(files, Options.sortOrder)
         }
         Log.d("rescan", "files count: " + files.size)
         for (f in files)
