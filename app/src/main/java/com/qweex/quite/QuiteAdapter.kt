@@ -37,9 +37,9 @@ class QuiteAdapter(target: Uri, internal var fragmentManager: FragmentManager, c
 
     private fun scanFolder(directory : File) {
         val foldersToScan : ArrayList<File> = arrayListOf()
-        Log.d("rescan", directory.toString() + "...")
+        Log.d("rescan", "scan folder: " + directory.toString() + "...")
         val filesListed : Array<File> = directory.listFiles { subdir, name ->
-            Log.d("rescan", name + "=" + handlesFile(name, Options.filetypesSelected))
+            Log.d("rescan", "scanning file: " + name + "=" + handlesFile(name, Options.filetypesSelected))
             if(File(subdir,name).isDirectory and Options.recurse)
                 foldersToScan.add(File(subdir, name))
             handlesFile(name, Options.filetypesSelected)
@@ -52,19 +52,20 @@ class QuiteAdapter(target: Uri, internal var fragmentManager: FragmentManager, c
 
     fun rescan() {
         files.clear()
-
-        val filesArray : Array<File?> = arrayOfNulls(files.size)
-        files.toArray(filesArray)
+        scanFolder(dir)
 
         for (s in Options.filetypesSelected)
-            Log.d("rescan", "" + s)
-        scanFolder(dir)
-        for (f in files)
-            Log.d("rescan", f.name + "!")
+            Log.d("rescan", "filetype: " + s)
+
         if (Options.sortOrder === Options.RANDOM) {
             //    Collections.shuffle(files);
-        } else
-            Arrays.sort(filesArray, Options.sortOrder)
+        } else {
+            Collections.sort(files, Options.sortOrder)
+            Log.d("rescan", "sort order: " + Options.sortOrder)
+        }
+        Log.d("rescan", "files count: " + files.size)
+        for (f in files)
+            Log.d("rescan", "file: " + f!!.name)
         fragments = arrayOfNulls(size = this.files.size)
         try {
             for (position in files.indices) {
@@ -109,7 +110,6 @@ class QuiteAdapter(target: Uri, internal var fragmentManager: FragmentManager, c
         try {
             val proj = arrayOf(MediaStore.Images.Media.DATA)
             cursor = context.contentResolver.query(contentUri, proj, null, null, null)
-            Log.d("WAAAA", contentUri.toString() + " " + proj + " " + cursor)
             val column_index = cursor!!.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
             cursor.moveToFirst()
             return cursor.getString(column_index)

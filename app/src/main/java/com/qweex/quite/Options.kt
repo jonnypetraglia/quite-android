@@ -188,8 +188,8 @@ class Options(act:MainActivity) {
                 VideoFragment.filesHandled.size))
         var filetypesSelected:Array<String?>
 
-         var nameAsc:Comparator<File?> = Comparator { f1, f2 -> f1!!.path.compareTo(f2!!.path) }
-         var nameDesc:Comparator<File?> = Comparator { f1, f2 -> f2!!.path.compareTo(f1!!.path) }
+         var nameAsc:Comparator<File?> = Comparator { f1, f2 -> f1!!.path.toLowerCase().compareTo(f2!!.path.toLowerCase()) }
+         var nameDesc:Comparator<File?> = Comparator { f1, f2 -> f2!!.path.toLowerCase().compareTo(f1!!.path.toLowerCase()) }
          var dateAsc:Comparator<File?> = Comparator { f1, f2 -> (f1!!.lastModified() - f2!!.lastModified()) as Int }
          var dateDesc:Comparator<File?> = Comparator { f1, f2 -> (f2!!.lastModified() - f1!!.lastModified()) as Int }
          var sizeAsc:Comparator<File?> = Comparator { f1, f2 -> (f1!!.getTotalSpace() - f2!!.getTotalSpace()) as Int }
